@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import dynamic from 'next/dynamic';
 import Sidebar from '@/components/Sidebar';
 import { locations } from '@/data/locations';
@@ -183,7 +183,7 @@ export default function Home() {
                         <div className="mb-4">
                           <h3 className="text-sm font-semibold text-gray-500">Leírás</h3>
                           <p className="text-gray-700">{selectedLocation.description}</p>
-        </div>
+                        </div>
                       )}
                       <div className="mt-4">
                         <button 

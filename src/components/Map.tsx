@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
@@ -123,6 +123,12 @@ function MarkerWithRef({
           <h3 className="font-bold">{locationName}</h3>
           <p>{locationAddress}</p>
           <p className="text-sm text-blue-600">{locationCategory}</p>
+          <button 
+            className="mt-2 px-3 py-1 bg-blue-600 text-white rounded text-sm hover:bg-blue-700"
+            onClick={onClick}
+          >
+            Részletek
+          </button>
         </div>
       </Popup>
     </Marker>
@@ -130,7 +136,9 @@ function MarkerWithRef({
 }
 
 const Map: React.FC<MapProps> = ({ locations, selectedLocation, onSelectLocation }) => {
-  const defaultCenter: [number, number] = [47.497913, 19.040236]; // Budapest
+  // Budapest koordináták alapértelmezettként, useMemo-val, hogy ne változzon minden rendereléskor
+  const defaultCenter = useMemo<[number, number]>(() => [47.497913, 19.040236], []);
+  
   const [center, setCenter] = useState<[number, number]>(defaultCenter);
   const [zoom, setZoom] = useState(12);
   const markersRef = useRef<{[key: string]: L.Marker}>({});
@@ -169,7 +177,7 @@ const Map: React.FC<MapProps> = ({ locations, selectedLocation, onSelectLocation
       setCenter(defaultCenter);
       setZoom(12);
     }
-  }, [selectedLocation, locations]);
+  }, [selectedLocation, locations, defaultCenter]);
 
   // Helyek kiválasztásának kezelése
   const handleLocationSelect = useCallback((id: string) => {

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { categories, Category } from '@/data/categories';
+import { categories } from '@/data/categories';
 
 type SidebarProps = {
   onSelectCategory: (categoryId: string) => void;
@@ -17,10 +17,24 @@ const Sidebar: React.FC<SidebarProps> = ({
     category.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  // Keresési kifejezés változásának kezelése
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchTerm(e.target.value);
+  };
+
   return (
     <div className="w-full h-full bg-white overflow-y-auto shadow-md">
       <div className="p-4 bg-blue-600 text-white">
         <h1 className="text-xl font-bold">Kategóriák</h1>
+      </div>
+      <div className="p-2">
+        <input
+          type="text"
+          placeholder="Keresés..."
+          className="w-full p-2 border border-gray-300 rounded"
+          value={searchTerm}
+          onChange={handleSearchChange}
+        />
       </div>
       <ul className="divide-y divide-gray-200">
         {filteredCategories.map((category) => (
