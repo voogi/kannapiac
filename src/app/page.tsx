@@ -1,100 +1,331 @@
-import Image from "next/image";
+'use client';
+
+import { useState, useEffect, useRef } from 'react';
+import dynamic from 'next/dynamic';
+import Sidebar from '@/components/Sidebar';
+import { locations } from '@/data/locations';
+import { categories } from '@/data/categories';
+
+// Dinamikusan importáljuk a Map komponenst, hogy elkerüljük a szerver oldali renderelési problémákat
+const Map = dynamic(() => import('@/components/Map'), {
+  ssr: false,
+  loading: () => (
+    <div className="w-full h-full flex items-center justify-center bg-gray-100">
+      Térkép betöltése...
+    </div>
+  ),
+});
 
 export default function Home() {
-  return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-8 row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-semibold">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li>Save and see your changes instantly.</li>
-        </ol>
+  const [selectedLocationId, setSelectedLocationId] = useState<string | null>(null);
+  const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null);
+  const [isMobile, setIsMobile] = useState(false);
+  const [showLocations, setShowLocations] = useState(false);
+  
+  // Képernyőméret figyelése
+  useEffect(() => {
+    const checkIfMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    
+    checkIfMobile();
+    window.addEventListener('resize', checkIfMobile);
+    
+    return () => {
+      window.removeEventListener('resize', checkIfMobile);
+    };
+  }, []);
+  
+  // Szűrt helyek a kiválasztott kategória alapján
+  const filteredLocations = selectedCategoryId 
+    ? locations.filter(location => location.category.toLowerCase() === selectedCategoryId.toLowerCase())
+    : [];
+  
+  const selectedLocation = selectedLocationId 
+    ? locations.find(loc => loc.id === selectedLocationId) 
+    : null;
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:min-w-44"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+  const handleSelectCategory = (categoryId: string) => {
+    console.log("Kategória kiválasztva:", categoryId);
+    setSelectedCategoryId(categoryId);
+    setSelectedLocationId(null);
+    setShowLocations(true);
+  };
+
+  const handleSelectLocation = (id: string) => {
+    console.log("Hely kiválasztva a főoldalon:", id);
+    setSelectedLocationId(id);
+  };
+
+  const handleCloseDetail = () => {
+    console.log("Részletek bezárása a főoldalon");
+    setSelectedLocationId(null);
+  };
+
+  const handleBackToCategories = () => {
+    console.log("Vissza a kategóriákhoz");
+    setShowLocations(false);
+    setSelectedCategoryId(null);
+    setSelectedLocationId(null);
+  };
+
+  // Kiválasztott kategória neve
+  const selectedCategoryName = selectedCategoryId 
+    ? categories.find(cat => cat.id === selectedCategoryId)?.name 
+    : '';
+
+  // Debug információk
+  useEffect(() => {
+    console.log("Állapot változás:");
+    console.log("- selectedLocationId:", selectedLocationId);
+    console.log("- selectedLocation:", selectedLocation ? selectedLocation.name : null);
+  }, [selectedLocationId, selectedLocation]);
+
+  return (
+    <div className="flex flex-col h-screen">
+      <header className="bg-blue-700 text-white p-4 shadow-md">
+        <div className="container mx-auto">
+          <h1 className="text-2xl font-bold">KannaPiac</h1>
+          <p className="text-sm">Fedezd fel a környék legjobb helyeit</p>
         </div>
+      </header>
+
+      <main className="flex-1 flex flex-col md:flex-row overflow-hidden">
+        {/* Mobilnézet: Kategóriák/Helyek és Térkép egymás alatt */}
+        {isMobile ? (
+          <div className="flex flex-col h-full overflow-auto">
+            {/* Kategóriák vagy helyek listája mobilon */}
+            {!selectedLocation && (
+              <div className="w-full">
+                {!showLocations ? (
+                  // Kategóriák listája
+                  <div className="w-full">
+                    <Sidebar 
+                      selectedCategory={selectedCategoryId}
+                      onSelectCategory={handleSelectCategory}
+                    />
+                  </div>
+                ) : (
+                  // Helyek listája a kiválasztott kategóriában
+                  <div className="w-full bg-white shadow-md">
+                    <div className="p-4 bg-blue-600 text-white flex items-center">
+                      <button 
+                        onClick={handleBackToCategories}
+                        className="mr-2 text-white"
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                          <path fillRule="evenodd" d="M9.707 14.707a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 1.414L7.414 9H15a1 1 0 110 2H7.414l2.293 2.293a1 1 0 010 1.414z" clipRule="evenodd" />
+                        </svg>
+                      </button>
+                      <h1 className="text-xl font-bold">{selectedCategoryName}</h1>
+                    </div>
+                    <div className="p-2">
+                      <input
+                        type="text"
+                        placeholder="Keresés..."
+                        className="w-full p-2 border border-gray-300 rounded"
+                      />
+                    </div>
+                    {filteredLocations.length > 0 ? (
+                      <ul className="divide-y divide-gray-200">
+                        {filteredLocations.map((location) => (
+                          <li 
+                            key={location.id}
+                            className={`p-4 hover:bg-gray-100 cursor-pointer ${
+                              selectedLocationId === location.id ? 'bg-blue-100' : ''
+                            }`}
+                            onClick={() => handleSelectLocation(location.id)}
+                          >
+                            <h3 className="font-medium text-gray-900">{location.name}</h3>
+                            <p className="text-sm text-gray-500">{location.address}</p>
+                          </li>
+                        ))}
+                      </ul>
+                    ) : (
+                      <div className="p-4 text-center text-gray-500">
+                        Nincsenek helyek ebben a kategóriában.
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Kiválasztott hely részletei mobilon */}
+            {selectedLocation ? (
+              <div className="w-full h-full overflow-auto">
+                <div className="p-4">
+                  <button 
+                    onClick={handleCloseDetail}
+                    className="mb-4 flex items-center text-blue-600"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-1" viewBox="0 0 20 20" fill="currentColor">
+                      <path fillRule="evenodd" d="M9.707 14.707a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 1.414L7.414 9H15a1 1 0 110 2H7.414l2.293 2.293a1 1 0 010 1.414z" clipRule="evenodd" />
+                    </svg>
+                    Vissza a listához
+                  </button>
+                  <div className="bg-white rounded-lg shadow-md overflow-hidden">
+                    <div className="p-4 bg-blue-600 text-white">
+                      <h2 className="text-xl font-bold">{selectedLocation.name}</h2>
+                    </div>
+                    <div className="p-4">
+                      <div className="mb-4">
+                        <h3 className="text-sm font-semibold text-gray-500">Cím</h3>
+                        <p className="text-gray-700">{selectedLocation.address}</p>
+                      </div>
+                      <div className="mb-4">
+                        <h3 className="text-sm font-semibold text-gray-500">Kategória</h3>
+                        <span className="inline-block px-2 py-1 text-xs font-semibold text-blue-800 bg-blue-100 rounded-full">
+                          {selectedLocation.category}
+                        </span>
+                      </div>
+                      {selectedLocation.description && (
+                        <div className="mb-4">
+                          <h3 className="text-sm font-semibold text-gray-500">Leírás</h3>
+                          <p className="text-gray-700">{selectedLocation.description}</p>
+        </div>
+                      )}
+                      <div className="mt-4">
+                        <button 
+                          className="w-full py-2 px-4 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
+                          onClick={() => window.open(`https://www.google.com/maps/dir/?api=1&destination=${selectedLocation.lat},${selectedLocation.lng}`, '_blank')}
+                        >
+                          Útvonaltervezés
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              // Térkép mobilon
+              <div className="w-full h-[60vh]">
+                <Map 
+                  locations={showLocations ? filteredLocations : []}
+                  selectedLocation={selectedLocationId}
+                  onSelectLocation={handleSelectLocation}
+                />
+              </div>
+            )}
+          </div>
+        ) : (
+          // Asztali nézet: Sidebar és Térkép egymás mellett
+          <>
+            {/* Sidebar asztali nézetben */}
+            <div className="w-1/3 lg:w-1/4 h-full overflow-auto border-r">
+              {!showLocations ? (
+                // Kategóriák listája
+                <Sidebar 
+                  selectedCategory={selectedCategoryId}
+                  onSelectCategory={handleSelectCategory}
+                />
+              ) : (
+                // Helyek listája a kiválasztott kategóriában
+                <div className="w-full h-full bg-white overflow-y-auto shadow-md">
+                  <div className="p-4 bg-blue-600 text-white flex items-center">
+                    <button 
+                      onClick={handleBackToCategories}
+                      className="mr-2 text-white"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                        <path fillRule="evenodd" d="M9.707 14.707a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 1.414L7.414 9H15a1 1 0 110 2H7.414l2.293 2.293a1 1 0 010 1.414z" clipRule="evenodd" />
+                      </svg>
+                    </button>
+                    <h1 className="text-xl font-bold">{selectedCategoryName}</h1>
+                  </div>
+                  <div className="p-2">
+                    <input
+                      type="text"
+                      placeholder="Keresés..."
+                      className="w-full p-2 border border-gray-300 rounded"
+                    />
+                  </div>
+                  {filteredLocations.length > 0 ? (
+                    <ul className="divide-y divide-gray-200">
+                      {filteredLocations.map((location) => (
+                        <li 
+                          key={location.id}
+                          className={`p-4 hover:bg-gray-100 cursor-pointer ${
+                            selectedLocationId === location.id ? 'bg-blue-100' : ''
+                          }`}
+                          onClick={() => handleSelectLocation(location.id)}
+                        >
+                          <h3 className="font-medium text-gray-900">{location.name}</h3>
+                          <p className="text-sm text-gray-500">{location.address}</p>
+                        </li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <div className="p-4 text-center text-gray-500">
+                      Nincsenek helyek ebben a kategóriában.
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+
+            {/* Térkép és részletek asztali nézetben */}
+            <div className="w-2/3 lg:w-3/4 h-full flex">
+              {/* Térkép */}
+              <div className={`${selectedLocation ? 'w-2/3' : 'w-full'} h-full transition-all duration-300`}>
+                <Map 
+                  locations={showLocations ? filteredLocations : []}
+                  selectedLocation={selectedLocationId}
+                  onSelectLocation={handleSelectLocation}
+                />
+              </div>
+              
+              {/* Részletek panel asztali nézetben */}
+              {selectedLocation && (
+                <div className="w-1/3 h-full overflow-auto bg-white border-l border-gray-200 shadow-lg">
+                  <div className="p-4 bg-blue-600 text-white flex justify-between items-center">
+                    <h2 className="text-lg font-bold">{selectedLocation.name}</h2>
+                    <button 
+                      onClick={handleCloseDetail}
+                      className="text-white hover:text-gray-200"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                    </button>
+                  </div>
+                  <div className="p-4">
+                    <div className="mb-4">
+                      <h3 className="text-sm font-semibold text-gray-500">Cím</h3>
+                      <p className="text-gray-700">{selectedLocation.address}</p>
+                    </div>
+                    <div className="mb-4">
+                      <h3 className="text-sm font-semibold text-gray-500">Kategória</h3>
+                      <span className="inline-block px-2 py-1 text-xs font-semibold text-blue-800 bg-blue-100 rounded-full">
+                        {selectedLocation.category}
+                      </span>
+                    </div>
+                    {selectedLocation.description && (
+                      <div className="mb-4">
+                        <h3 className="text-sm font-semibold text-gray-500">Leírás</h3>
+                        <p className="text-gray-700">{selectedLocation.description}</p>
+                      </div>
+                    )}
+                    <div className="mt-4">
+                      <button 
+                        className="w-full py-2 px-4 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
+                        onClick={() => window.open(`https://www.google.com/maps/dir/?api=1&destination=${selectedLocation.lat},${selectedLocation.lng}`, '_blank')}
+                      >
+                        Útvonaltervezés
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          </>
+        )}
       </main>
-      <footer className="row-start-3 flex gap-6 flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
+
+      <footer className="bg-gray-100 p-4 text-center text-gray-600 text-sm">
+        <div className="container mx-auto">
+          &copy; {new Date().getFullYear()} KannaPiac - Minden jog fenntartva
+        </div>
       </footer>
     </div>
   );

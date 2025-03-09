@@ -1,36 +1,59 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# KannaPiac
 
-## Getting Started
+Ez egy Next.js alapú webalkalmazás, amely egy térképes helykereső szolgáltatást nyújt. Az alkalmazás a ShivaMap (https://www.shivamap.es/en) oldalhoz hasonló felépítésű, bal oldali sidebar-ral és jobb oldali térképpel.
 
-First, run the development server:
+## Funkciók
 
+- Kategóriák böngészése
+- Helyek listázása kategóriák szerint
+- OpenStreetMap térkép integráció
+- Helyek megjelenítése a térképen
+- Részletes információk megjelenítése a kiválasztott helyről
+- Reszponzív design
+
+## Technológiák
+
+- Next.js 15
+- TypeScript
+- Tailwind CSS
+- Leaflet és React-Leaflet
+- OpenStreetMap
+
+## Telepítés
+
+1. Klónozd a repository-t:
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+git clone [repository URL]
+cd kannapiac
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+2. Telepítsd a függőségeket:
+```bash
+npm install
+```
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+3. Indítsd el a fejlesztői szervert:
+```bash
+npm run dev
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+4. Nyisd meg a böngészőben: [http://localhost:3000](http://localhost:3000)
 
-## Learn More
+## Fejlesztés
 
-To learn more about Next.js, take a look at the following resources:
+Az alkalmazás fő komponensei:
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+- `src/app/page.tsx` - A főoldal, amely tartalmazza a sidebar-t és a térképet
+- `src/components/Sidebar.tsx` - A bal oldali sidebar komponens kategóriákkal
+- `src/components/Map.tsx` - A Leaflet térkép komponens
+- `src/components/LocationDetail.tsx` - A kiválasztott hely részleteit megjelenítő komponens
+- `src/data/categories.ts` - A kategóriák adatait tartalmazó fájl
+- `src/data/locations.ts` - A helyek adatait tartalmazó fájl
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Leaflet és OpenStreetMap
 
-## Deploy on Vercel
+A projekt Leaflet könyvtárat használ a térképek megjelenítéséhez, OpenStreetMap adatokkal. Ez egy ingyenes és nyílt forráskódú alternatíva a Google Maps helyett, amely nem igényel API kulcsot.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Licenc
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+MIT
