@@ -9,8 +9,6 @@ type LocationDetailProps = {
 const LocationDetail: React.FC<LocationDetailProps> = ({ location, onClose }) => {
   if (!location) return null;
 
-  console.log("LocationDetail renderelése:", location.name);
-
   return (
     <div className="absolute top-4 right-4 w-80 bg-white rounded-lg shadow-lg z-10 overflow-hidden">
       <div className="p-4 bg-blue-600 text-white flex justify-between items-center">
